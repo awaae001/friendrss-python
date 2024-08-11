@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
-def getSiteTitle(url):
+def get_site_title(url):
     try:
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -14,7 +14,7 @@ def getSiteTitle(url):
         print(f"\n无法获取站点标题: {url}\n错误信息: {e}")
         return "Unknown Site"
 
-def updateAuthors(moments_filename, site_info_filename):
+def update_authors(moments_filename, site_info_filename):
     # 读取现有的站点信息
     if os.path.exists(site_info_filename):
         with open(site_info_filename, 'r', encoding='utf-8') as file:
@@ -23,8 +23,12 @@ def updateAuthors(moments_filename, site_info_filename):
         site_info = {}
 
     # 读取解析后的 moments 文件
-    with open(moments_filename, 'r', encoding='utf-8') as file:
-        moments = json.load(file)
+    if os.path.exists(moments_filename):
+        with open(moments_filename, 'r', encoding='utf-8') as file:
+            moments = json.load(file)
+    else:
+        print(f"文件 '{moments_filename}' 未找到")
+        return
 
     # 标志位，用于判断是否有新站点被添加
     updated = False
@@ -34,7 +38,7 @@ def updateAuthors(moments_filename, site_info_filename):
         site_root = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
         if site_root not in site_info:
-            site_title = getSiteTitle(site_root)
+            site_title = get_site_title(site_root)
             site_info[site_root] = site_title
             updated = True
 
@@ -51,6 +55,3 @@ def updateAuthors(moments_filename, site_info_filename):
     with open(moments_filename, 'w', encoding='utf-8') as file:
         json.dump(moments, file, ensure_ascii=False, indent=4)
     print("moments.json 文件已更新！")
-
-if __name__ == '__main__':
-    updateAuthors("./json/moments.json", "./json/site_info.json")
